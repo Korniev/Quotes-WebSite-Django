@@ -1,0 +1,10 @@
+{% extends 'quotes/base.html' %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    {{ form.tags }}
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endblock %}
