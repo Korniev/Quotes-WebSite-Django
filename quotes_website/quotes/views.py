@@ -1,3 +1,4 @@
+from bson import ObjectId
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
@@ -45,25 +46,29 @@ def add_author(request):
 @login_required
 def add_quote(request):
     db = get_mongo_db()
-    mongo_tags = db.tags.find()
-    tags_choices = [(tag['name'], tag['name']) for tag in mongo_tags]
+
+    # Оновлення для створення authors_choices
+    authors_choices = [(author.id, author.fullname) for author in Author.objects.all()]
 
     if request.method == 'POST':
         form = QuoteForm(request.POST)
-        form.fields['tags'].choices = tags_choices
+        form.fields['author'].queryset = Author.objects.all()
 
         if form.is_valid():
             quote_data = form.cleaned_data
-            quote = {
+            # Переконайтеся, що 'author' відповідає вашій моделі Author
+            author_id = quote_data['author'].id if quote_data['author'] else None
+
+            new_quote = {
                 "quote": quote_data['quote'],
-                "author": quote_data['author'],
-                "tags": quote_data['tags']
+                "author": author_id,  # Використання ID автора
             }
-            db.quotes.insert_one(quote)
+            db.quotes.insert_one(new_quote)
 
             return redirect('quotes:root')
     else:
         form = QuoteForm()
-        form.fields['tags'].choices = tags_choices
+        form.fields['author'].queryset = Author.objects.all()
 
     return render(request, 'quotes/add_quote.html', {'form': form})
+

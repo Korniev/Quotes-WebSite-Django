@@ -10,14 +10,11 @@ class AuthorForm(forms.ModelForm):
 
 
 class QuoteForm(forms.ModelForm):
-
-    tags = forms.MultipleChoiceField(choices=[], widget=forms.CheckboxSelectMultiple)
-
     class Meta:
         model = Quote
-        fields = ['quote', 'author', 'tags']
+        fields = ['quote', 'author']
 
     def __init__(self, *args, **kwargs):
-        authors_choices = kwargs.pop('authors_choices', [])
         super(QuoteForm, self).__init__(*args, **kwargs)
-        self.fields['author'].choices = authors_choices
+        authors_choices = kwargs.pop('authors_choices', [])
+        self.fields['author'].queryset = Author.objects.filter(id__in=[a[0] for a in authors_choices])
