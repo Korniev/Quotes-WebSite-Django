@@ -1,10 +1,10 @@
-from bson import ObjectId
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from .forms import AuthorForm, QuoteForm
 from .utils import get_mongo_db
 from .models import Author, Quote
+from datetime import datetime
 
 
 # Create your views here.
@@ -59,7 +59,8 @@ def add_quote(request):
 
             new_quote = {
                 "quote": quote_data['quote'],
-                "author": author_id,
+                "author": quote_data['author'].id if quote_data['author'] else None,
+                "created_at": datetime.utcnow()
             }
             db.quotes.insert_one(new_quote)
 
