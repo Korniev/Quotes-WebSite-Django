@@ -47,7 +47,6 @@ def add_author(request):
 def add_quote(request):
     db = get_mongo_db()
 
-    # Оновлення для створення authors_choices
     authors_choices = [(author.id, author.fullname) for author in Author.objects.all()]
 
     if request.method == 'POST':
@@ -56,12 +55,11 @@ def add_quote(request):
 
         if form.is_valid():
             quote_data = form.cleaned_data
-            # Переконайтеся, що 'author' відповідає вашій моделі Author
             author_id = quote_data['author'].id if quote_data['author'] else None
 
             new_quote = {
                 "quote": quote_data['quote'],
-                "author": author_id,  # Використання ID автора
+                "author": author_id,
             }
             db.quotes.insert_one(new_quote)
 
