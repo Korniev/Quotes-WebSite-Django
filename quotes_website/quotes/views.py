@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
-from .forms import AuthorForm
+from .forms import AuthorForm, QuoteForm
 from .utils import get_mongo_db
 from .models import Author, Quote
 
@@ -21,30 +21,49 @@ def main(request, page=1):
 @login_required
 def add_author(request):
     if request.method == 'POST':
-        author_form = AuthorForm(request.POST)
-        if author_form.is_valid():
-            new_author = author_form.save()
-            quote_text = author_form.cleaned_data['quote']
-            if quote_text:
-                new_quote = Quote(quote=quote_text, author=new_author)
-                new_quote.save()
-                for tag in author_form.cleaned_data['tags']:
-                    new_quote.tags.add(tag)
-                new_quote.save()
+        form = AuthorForm(request.POST)
+        if form.is_valid():
+            db = get_mongo_db()
+            authors_collection = db['authors']
 
-                db = get_mongo_db()
-                author_data = {
-                    'fullname': new_author.fullname,
-                    'born_date': new_author.born_date,
-                    'born_location': new_author.born_location,
-                    'description': new_author.description
-                }
-                db.authors.insert_one(author_data)
-                db.quotes.insert_one({'quote': quote_text, 'author': author_data})
+            author_data = {
+                'fullname': form.cleaned_data['fullname'],
+                'born_date': form.cleaned_data['born_date'],
+                'born_location': form.cleaned_data['born_location'],
+                'description': form.cleaned_data['description']
+            }
+
+            authors_collection.insert_one(author_data)
 
             return redirect('quotes:root')
     else:
-        author_form = AuthorForm()
-    return render(request, 'quotes/add_author.html', {'form': author_form})
+        form = AuthorForm()
+
+    return render(request, 'quotes/add_author.html', {'form': form})
 
 
+@login_required
+def add_quote(request):
+    db = get_mongo_db()
+    mongo_tags = db.tags.find()
+    tags_choices = [(tag['name'], tag['name']) for tag in mongo_tags]
+
+    if request.method == 'POST':
+        form = QuoteForm(request.POST)
+        form.fields['tags'].choices = tags_choices
+
+        if form.is_valid():
+            quote_data = form.cleaned_data
+            quote = {
+                "quote": quote_data['quote'],
+                "author": quote_data['author'],
+                "tags": quote_data['tags']
+            }
+            db.quotes.insert_one(quote)
+
+            return redirect('quotes:root')
+    else:
+        form = QuoteForm()
+        form.fields['tags'].choices = tags_choices
+
+    return render(request, 'quotes/add_quote.html', {'form': form})
