@@ -23,21 +23,15 @@ def add_author(request):
     if request.method == 'POST':
         author_form = AuthorForm(request.POST)
         if author_form.is_valid():
-            # Зберігаємо автора в базі даних Django
             new_author = author_form.save()
-
-            # Додавання цитати
             quote_text = author_form.cleaned_data['quote']
             if quote_text:
-                # Створення нової цитати зі збереженим автором
                 new_quote = Quote(quote=quote_text, author=new_author)
                 new_quote.save()
-                # Додавання тегів до цитати
                 for tag in author_form.cleaned_data['tags']:
                     new_quote.tags.add(tag)
                 new_quote.save()
 
-                # Тут додаємо автора та цитату в MongoDB
                 db = get_mongo_db()
                 author_data = {
                     'fullname': new_author.fullname,
