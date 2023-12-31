@@ -1,8 +1,13 @@
+import os
+
 from pymongo import MongoClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def get_mongo_db():
-    client = MongoClient('mongodb://localhost:27017/')
+    client = os.getenv('DB_CONNECT')
 
-    db = client['Go-it_HW8']
+    db = os.getenv('DB_NAME')
     return db
