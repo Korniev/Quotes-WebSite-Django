@@ -7,7 +7,7 @@ load_dotenv()
 
 
 def get_mongo_db():
-    client = os.getenv('DB_CONNECT')
+    client = MongoClient('mongodb://localhost:27017/')
 
-    db = os.getenv('DB_NAME')
+    db = client['Go-it_HW8']
     return db
